@@ -17,6 +17,7 @@ public class GameController : MonoBehaviour
     private System.Random rand = new System.Random();
 
     public GameObject[] scenes;
+    public GameObject gameOverPanel;
     public Sprite[] weapons;
     public Image weaponIcon;
     public Button dismountButton;
@@ -26,10 +27,12 @@ public class GameController : MonoBehaviour
     public Text damageText;
     public Text weaponName;
     public Text weaponDmgText;
+    public Text xpText;
 
     int currentIndex = 0; //used to keep track of scene
     int weaponDmg = 0;
     int monsterHealth = 0;
+    int xp = 0;
 
     void Start()
     {
@@ -41,23 +44,23 @@ public class GameController : MonoBehaviour
     
     void Update()
     {
-        if(player.GetComponent<MoveOnBoard>().waypointIndex > startPoint + diceSideThrown)
+        if(player.GetComponent<MoveOnBoard>().waypointIndex > startPoint + diceSideThrown)//Checks if player has moved theproper amount of spaces
         {
-            player.GetComponent<MoveOnBoard>().moveAllowed = false;
-            startPoint = player.GetComponent<MoveOnBoard>().waypointIndex;
+            player.GetComponent<MoveOnBoard>().moveAllowed = false;//stops player movement
+            startPoint = player.GetComponent<MoveOnBoard>().waypointIndex;//resets startpoint to the player's current position on the board
 
-            choosingArea();
+            choosingArea();//determines a random area
             dismountButton.interactable = true;
         }
 
-        if (player.GetComponent<MoveOnBoard>().waypointIndex == player.GetComponent<MoveOnBoard>().waypoints.Length)
+        if (player.GetComponent<MoveOnBoard>().waypointIndex == player.GetComponent<MoveOnBoard>().waypoints.Length)//checks if player has reached the end of the board
         {
             currentIndex = 3;
             dismountButton.interactable = true;
             gameOver = true;
         }
 
-        monsterHP.text = "Monster HP: " + monsterHealth;
+        monsterHP.text = "Monster HP: " + monsterHealth;//Update monsters health onto the screen.
     }
 
     public static void MovePlayer()
@@ -67,9 +70,9 @@ public class GameController : MonoBehaviour
 
     void choosingArea()
     {
-        int shuffleNum = rand.Next(0, areas.Count);
+        int shuffleNum = rand.Next(0, areas.Count);//get random number from areas List to act as an index.
 
-        switch (areas[shuffleNum])
+        switch (areas[shuffleNum])//check against the value picked from the areas List.
         {
             case 0://Monster Scene
                 areas.Remove(areas[shuffleNum]);
@@ -91,6 +94,7 @@ public class GameController : MonoBehaviour
 
     void AdjustMonsterHP()
     {
+        //if statements checks for the players current position to determine the amount of health the monster will have.
         if (startPoint < 4)
         {
             monsterHealth = 3;
@@ -115,6 +119,7 @@ public class GameController : MonoBehaviour
 
     public void CheckWeapon()//Decides the weapon given
     {
+        //if statements checks for the players current position to determine the level of weapon they'll get.
         if (startPoint < 4)
         {
             weaponIcon.sprite = weapons[0];
@@ -169,6 +174,8 @@ public class GameController : MonoBehaviour
             buttonText.text = "Dismount";
             dismountButton.interactable = false;
             attackButton.interactable = true;  //reactivate the attack button for the next battle that may occur
+            damage = 0;
+            damageText.text = "Total Damage: " + damage;
         }
     }
 
@@ -177,10 +184,20 @@ public class GameController : MonoBehaviour
         damage += weaponDmg;
         damageText.text = "Total Damage: " + damage;
 
-        if (damage > monsterHealth)
+        if (damage >= monsterHealth)//ensures monster health doesn't go lower than 0.
+        {
             monsterHealth = 0;
-        else
+            xp += 2;
+            xpText.text = "XP: " + xp;
+        }
+        else //else you lose
+        {
             monsterHealth -= damage;
+            gameOverPanel.SetActive(true);
+            onBoard = true;
+            startPoint = 0;
+            player.GetComponent<MoveOnBoard>().waypointIndex = 0;
+        }
 
         attackButton.interactable = false; //Make it so the player can only attack once
     }

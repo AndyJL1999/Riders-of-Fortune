@@ -17,7 +17,7 @@ public class DiceControl : MonoBehaviour
 
     public void Roll()
     {
-        if (!GameController.gameOver && coroutineAllowed)
+        if (!GameController.gameOver && coroutineAllowed)//if game is not over, allow dice roll
             StartCoroutine("RollDice");
     }
 
@@ -32,7 +32,7 @@ public class DiceControl : MonoBehaviour
             yield return new WaitForSeconds(0.05f);
         }
 
-        if (GameController.onBoard)
+        if (GameController.onBoard) //if the roll occured on the board scene
         {
             GameController.diceSideThrown = randomSide;
             GameController.MovePlayer();
