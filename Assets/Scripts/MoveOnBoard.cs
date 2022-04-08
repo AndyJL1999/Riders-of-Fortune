@@ -5,7 +5,7 @@ using UnityEngine;
 public class MoveOnBoard : MonoBehaviour
 {
     public Transform[] waypoints;
-    private float speed = 50f;
+    private float speed = 100f;
 
     [HideInInspector]
     public int waypointIndex = 0;
@@ -22,11 +22,11 @@ public class MoveOnBoard : MonoBehaviour
 
     private void Move()
     {
-        if(waypointIndex <= waypoints.Length - 1)
+        if(waypointIndex <= waypoints.Length - 1)//move as long as there are waypoints
         {
             transform.position = Vector2.MoveTowards(transform.position, waypoints[waypointIndex].transform.position, speed * Time.deltaTime);
 
-            if((int)transform.position.x == (int)waypoints[waypointIndex].transform.position.x)
+            if((int)transform.position.x == (int)waypoints[waypointIndex].transform.position.x)//check if player has reached certain point to continue moving
             {
                 waypointIndex += 1;
             }

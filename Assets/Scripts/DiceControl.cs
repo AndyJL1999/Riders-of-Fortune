@@ -5,8 +5,10 @@ using UnityEngine.UI;
 
 public class DiceControl : MonoBehaviour
 {
+    public bool rolling;//used to check if we are currently rolling
     public Image dice;
     public Sprite[] sides;
+    public GameController dismount;
 
     private bool coroutineAllowed = true;
 
@@ -17,18 +19,22 @@ public class DiceControl : MonoBehaviour
 
     public void Roll()
     {
-        if (!GameController.gameOver && coroutineAllowed)//if game is not over, allow dice roll
+        if (!GameController.gameOver &&  !GameController.inBattle && coroutineAllowed && !rolling)//if game is not over, allow dice roll
+        {
             StartCoroutine("RollDice");
+            dismount.dismountButton.interactable = false;
+        }
     }
 
     private IEnumerator RollDice()
     {
         coroutineAllowed = false;
         int randomSide = 0;
-        for(int i = 0; i <= 20; i++)
+        for(int i = 0; i <= 20; i++) //changes dice sprite during roll
         {
             randomSide = Random.Range(0, 6);
             dice.sprite = sides[randomSide];
+            rolling = true;
             yield return new WaitForSeconds(0.05f);
         }
 
@@ -36,8 +42,9 @@ public class DiceControl : MonoBehaviour
         {
             GameController.diceSideThrown = randomSide;
             GameController.MovePlayer();
+            rolling = false;
         }
-        else
+        else//if roll occured in a battle scene
         {
             GameController.damage = randomSide + 1;
         }
