@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//This script is attached to the 'PositionPointer' game object. (Found in the 'Map' game object.)
 public class MoveOnBoard : MonoBehaviour
 {
     public Transform[] waypoints;

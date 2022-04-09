@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+//This script is atteched to the 'Canvas' of each scene.
 public class SceneController : MonoBehaviour
 {
     public void PlayGame()

@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+//This script is attached to the 'Dice' game object.
 public class DiceControl : MonoBehaviour
 {
     public bool rolling;//used to check if we are currently rolling
     public Image dice;
     public Sprite[] sides;
-    public GameController dismount;
+    public GameController controller;
 
     private bool coroutineAllowed = true;
 
@@ -22,7 +23,8 @@ public class DiceControl : MonoBehaviour
         if (!GameController.gameOver &&  !GameController.inBattle && coroutineAllowed && !rolling)//if game is not over, allow dice roll
         {
             StartCoroutine("RollDice");
-            dismount.dismountButton.interactable = false;
+            controller.dismountButton.interactable = false;
+            controller.attackButton.interactable = false;
         }
     }
 
@@ -35,6 +37,7 @@ public class DiceControl : MonoBehaviour
             randomSide = Random.Range(0, 6);
             dice.sprite = sides[randomSide];
             rolling = true;
+            gameObject.GetComponentInChildren<Button>().interactable = false;//don't let roll button be pressed while the dice is rolling
             yield return new WaitForSeconds(0.05f);
         }
 
@@ -47,6 +50,7 @@ public class DiceControl : MonoBehaviour
         else//if roll occured in a battle scene
         {
             GameController.damage = randomSide + 1;
+            controller.attackButton.interactable = true;
         }
         coroutineAllowed = true;
     }

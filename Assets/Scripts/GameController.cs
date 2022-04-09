@@ -3,19 +3,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+//This script attached to the 'GameController' game object
 public class GameController : MonoBehaviour
 {
     private static GameObject player;
 
-    public static int diceSideThrown = 0;
-    public static int startPoint = 0;
-    public static int damage = 0;
-    public static bool gameOver = false;
-    public static bool onBoard = true;
-    public static bool inBattle = false;
+    public static int diceSideThrown;
+    public static int startPoint;
+    public static int damage;
+    public static bool gameOver;
+    public static bool onBoard;
+    public static bool inBattle;
 
     public GameObject[] scenes;
     public GameObject gameOverPanel;
+    public GameObject victoryPanel;
+    public GameObject dragonTextPanel;
     public GameObject enemyHealthPanel;
     public GameObject totalDmgPanel;
     public GameObject dice;
@@ -35,43 +38,57 @@ public class GameController : MonoBehaviour
     public Text weaponDmgText;
     public Text xpText;
     public Text dragonText;
+    public Text receivedWeaponText;
+
+    public DiceControl rollButton;
 
     private List<int> areas = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2 };
+    private List<int> weaponSlots = new List<int> { 0, 1, 2, 3, 4 };
     private System.Random rand = new System.Random();
-
-    int sceneIndex = 0; //used to keep track of scene
-    int weaponIndex = 0;
-    int weaponDmg = 0;
-    int enemyHealth = 0;
-    int xp = 0;
+    private int sceneIndex; //used to keep track of scene
+    private int weaponDmg;//beginning damage for knife weapon
+    private int enemyHealth;
+    private int xp = 0;
 
     void Start()
     {
         player = GameObject.Find("PositionPointer");
-        player.GetComponent<MoveOnBoard>().moveAllowed = false;
         dismountButton.interactable = false;
         attackButton.gameObject.SetActive(false);
         enemyHealthPanel.SetActive(false);
         totalDmgPanel.SetActive(false);
+        dragonTextPanel.SetActive(false);
+        gameOver = false;
+        onBoard = true;
+        inBattle = false;
+        startPoint = 0;
+        damage = 0;
+        sceneIndex = 0; 
+        weaponDmg = 2;
+
+        weaponDmgText.text = "Damage: +" + weaponDmg;
     }
 
     
     void Update()
     {
-        if(player.GetComponent<MoveOnBoard>().waypointIndex > startPoint + diceSideThrown)//Checks if player has moved theproper amount of spaces
+        if(player.GetComponent<MoveOnBoard>().waypointIndex > startPoint + diceSideThrown 
+            && player.GetComponent<MoveOnBoard>().waypointIndex != player.GetComponent<MoveOnBoard>().waypoints.Length)//Checks if player has moved theproper amount of spaces
         {
             player.GetComponent<MoveOnBoard>().moveAllowed = false;//stops player movement
             startPoint = player.GetComponent<MoveOnBoard>().waypointIndex;//resets startpoint to the player's current position on the board
 
             choosingArea();//determines a random area
             dismountButton.interactable = true;
+            rollButton.GetComponentInChildren<Button>().interactable = true;//reactivate the roll button once the rolling has stopped
         }
 
-        if (player.GetComponent<MoveOnBoard>().waypointIndex == player.GetComponent<MoveOnBoard>().waypoints.Length)//checks if player has reached the end of the board
+        if ((player.GetComponent<MoveOnBoard>().waypointIndex == player.GetComponent<MoveOnBoard>().waypoints.Length)//checks if player has reached the end of the board
+            && startPoint < player.GetComponent<MoveOnBoard>().waypointIndex)//this secondary check is to ensure that this condition is only met once
         {
-            startPoint = player.GetComponent<MoveOnBoard>().waypointIndex;
-            Debug.Log(startPoint);
+            startPoint = player.GetComponent<MoveOnBoard>().waypointIndex + 1;
             sceneIndex = 3;
+            enemyHealth = 10;
             dismountButton.interactable = true;
         }
 
@@ -126,10 +143,6 @@ public class GameController : MonoBehaviour
         {
             enemyHealth = 7;
         }
-        else if(startPoint == 27)
-        {
-            enemyHealth = 10;
-        }
     }
 
     void ReturnToBoard()//set variables for board scene (used from other scenes)
@@ -137,18 +150,20 @@ public class GameController : MonoBehaviour
         scenes[sceneIndex].SetActive(false);//shut off current scene (go back to board)
         enemyHealthPanel.SetActive(false);
         totalDmgPanel.SetActive(false);
+        attackButton.gameObject.SetActive(false);
+        dice.SetActive(true);
         onBoard = true;
         inBattle = false;
-        buttonText.text = "Dismount";
         dismountButton.interactable = false;
         attackButton.interactable = true;  //reactivate the attack button for the next battle that may occur
         searchButton.interactable = true;
         xpButton.interactable = true;
-        damage = 0; //reset damage
-        damageText.text = "Total Damage: " + damage; // reset damage text
-        attackButton.gameObject.SetActive(false);
-        dice.SetActive(true);
         dice.GetComponent<DiceControl>().rolling = false;
+        rollButton.GetComponentInChildren<Button>().interactable = true;
+        buttonText.text = "Dismount";
+        damageText.text = "Total Damage: " + damage; // reset damage text
+        receivedWeaponText.text = "New Weapon?";
+        damage = 0; //reset damage
     }
 
     public static void MovePlayer()
@@ -158,44 +173,87 @@ public class GameController : MonoBehaviour
 
     public void CheckWeapon()//Decides the weapon given (used by search button in weapon scene)
     {
-        //if statements checks for the players current position to determine the level of weapon they'll get.
-        switch (weaponIndex)
+        int weaponIndex = rand.Next(0, weaponSlots.Count);
+
+        //switch statement checks for current weapon to determine the next weapon they'll get.
+        switch (weaponSlots[weaponIndex])
         {
             case 0:
-                weaponIcon.sprite = weapons[0];
-                weaponDmg = 3;
-                weaponName.text = "Crossbow";
-                weaponDmgText.text = "Damage: +" + weaponDmg;
+                if (weaponDmg < 3)
+                {
+                    weaponIcon.sprite = weapons[0];
+                    weaponDmg = 3;
+                    weaponName.text = "Crossbow";
+                    weaponDmgText.text = "Damage: +" + weaponDmg;
+                }
+                else
+                {
+                    receivedWeaponText.text = "You have a better weapon.";
+                    return;
+                }
                 break;
             case 1:
-                weaponIcon.sprite = weapons[1];
-                weaponDmg = 4;
-                weaponName.text = "Flail";
-                weaponDmgText.text = "Damage: +" + weaponDmg;
+                if (weaponDmg < 4)
+                {
+                    weaponIcon.sprite = weapons[1];
+                    weaponDmg = 4;
+                    weaponName.text = "Flail";
+                    weaponDmgText.text = "Damage: +" + weaponDmg;
+                }
+                else
+                {
+                    receivedWeaponText.text = "You have a better weapon.";
+                    return;
+                }
                 break;
             case 2:
-                weaponIcon.sprite = weapons[2];
-                weaponDmg = 5;
-                weaponName.text = "Broad Sword";
-                weaponDmgText.text = "Damage: +" + weaponDmg;
+                if (weaponDmg < 5)
+                {
+                    weaponIcon.sprite = weapons[2];
+                    weaponDmg = 5;
+                    weaponName.text = "Broad Sword";
+                    weaponDmgText.text = "Damage: +" + weaponDmg;
+                }
+                else
+                {
+                    receivedWeaponText.text = "You have a better weapon.";
+                    return;
+                }
                 break;
             case 3:
-                weaponIcon.sprite = weapons[3];
-                weaponDmg = 6;
-                weaponName.text = "Dragon Slayer";
-                weaponDmgText.text = "Damage: +" + weaponDmg;
+                if (weaponDmg < 6)
+                {
+                    weaponIcon.sprite = weapons[3];
+                    weaponDmg = 6;
+                    weaponName.text = "Dragon Slayer";
+                    weaponDmgText.text = "Damage: +" + weaponDmg;
+                }
+                else
+                {
+                    receivedWeaponText.text = "You have a better weapon.";
+                    return;
+                }
                 break;
             case 4:
-                weaponIcon.sprite = weapons[4];
-                weaponDmg = 7;
-                weaponName.text = "Spell of the Gods";
-                weaponDmgText.text = "Damage: +" + weaponDmg;
+                if (weaponDmg < 7)
+                {
+                    weaponIcon.sprite = weapons[4];
+                    weaponDmg = 7;
+                    weaponName.text = "Spell of the Gods";
+                    weaponDmgText.text = "Damage: +" + weaponDmg;
+                }
+                else
+                {
+                    receivedWeaponText.text = "You have a better weapon.";
+                    return;
+                }
                 break;
         }
 
         searchButton.interactable = false;
         dismountButton.interactable = true;
-        weaponIndex++;
+        weaponSlots.Remove(weaponSlots[weaponIndex]);
+        receivedWeaponText.text = "You received a better weapon!";
     }
 
     public void AddXP()
@@ -210,10 +268,10 @@ public class GameController : MonoBehaviour
         if (scenes[sceneIndex].activeSelf == false)//if there is no scene other than the board showing -> execute code
         {
             scenes[sceneIndex].SetActive(true);//activate new scene
-            onBoard = false;
-            buttonText.text = "Ride";
-            dismountButton.interactable = false;
-            dice.SetActive(false);
+            onBoard = false;//change flag to not on the board
+            buttonText.text = "Ride";//change dismount button text
+            dismountButton.interactable = false;//disable button
+            dice.SetActive(false);//disable dice
 
             if(sceneIndex == 0 || (sceneIndex == 3))//if scene is battle scene -> keep dice on screen
             {
@@ -222,14 +280,13 @@ public class GameController : MonoBehaviour
                 totalDmgPanel.SetActive(true);
                 attackButton.gameObject.SetActive(true);
                 dice.SetActive(true);
+                rollButton.GetComponentInChildren<Button>().interactable = true;//reactivate the roll button once the player is in a battle scene
 
-                if(sceneIndex == 3 && xp < 8)
+                if (sceneIndex == 3 && xp < 8)//only execute if the player is on the dragon scene and their xp is lower than 8
                 {
-                    dragonText.text = "Alas, the dragon’s eyes stare at you and places you under his spell. You try to move but fail to do so and find yourself torched by the dragon’s fire." +
-                " If only you had more experience, you could have seen it coming.";
-
-                    dice.SetActive(false);
-                    attackButton.GetComponentInChildren<Text>().text = "Continue";
+                    dice.SetActive(false);//deactivate dice
+                    attackButton.GetComponentInChildren<Text>().text = "Continue";//change text on attack button
+                    attackButton.interactable = true;//allow attack button to be pressed
                 }
             }
         }
@@ -247,26 +304,35 @@ public class GameController : MonoBehaviour
 
         if (damage >= enemyHealth)//checks damage and ensures that monster HP hits 0
         {
-            if(sceneIndex == 3)
+            enemyHealth = 0;
+
+            if (sceneIndex == 3)//execute if on dragon scene
             {
                 dragonText.text = "Due to your cunning and experience, you have defeated the deadly dragon. Your quest has ended good sir. " +
                 "You’ve obtained the Chalice of knowledge and all of earth’s mysteries are revealed.";
 
-                gameOver = true;
+                victoryPanel.SetActive(true);//activate victory panel
+                dragonTextPanel.SetActive(true);//show text
+                attackButton.interactable = false;
+
+                return;
             }
-            enemyHealth = 0;
             xp += 2;
             dismountButton.interactable = true;
         }
         else //else you lose
         {
+            if (sceneIndex == 3)//execute if on dragon scene
+            {
+                dragonText.text = "Alas, the dragon’s eyes stare at you and places you under his spell. You try to move but fail to do so and find yourself torched by the dragon’s fire." +
+            " If only you had more experience, you could have seen it coming.";
+
+                dragonTextPanel.SetActive(true);//activate dragon text panel
+                dice.SetActive(false);
+            }
+
             enemyHealth -= damage;
             gameOverPanel.SetActive(true);
-            onBoard = true;
-            inBattle = false;
-            startPoint = 0;
-            player.GetComponent<MoveOnBoard>().waypointIndex = 0;
-            dismountButton.interactable = false;
         }
 
         attackButton.interactable = false; //Make it so the player can only attack once
