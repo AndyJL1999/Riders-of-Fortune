@@ -44,11 +44,12 @@ public class GameController : MonoBehaviour
 
     private List<int> areas = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2 };
     private List<int> weaponSlots = new List<int> { 0, 1, 2, 3, 4 };
+    private List<int> damageSlots = new List<int> { 3, 4, 5, 6, 7 };
     private System.Random rand = new System.Random();
     private int sceneIndex; //used to keep track of scene
     private int weaponDmg;//beginning damage for knife weapon
     private int enemyHealth;
-    private int xp = 0;
+    private int xp;
 
     void Start()
     {
@@ -65,6 +66,7 @@ public class GameController : MonoBehaviour
         damage = 0;
         sceneIndex = 0; 
         weaponDmg = 2;
+        xp = 0;
 
         weaponDmgText.text = "Damage: +" + weaponDmg;
     }
@@ -160,10 +162,10 @@ public class GameController : MonoBehaviour
         xpButton.interactable = true;
         dice.GetComponent<DiceControl>().rolling = false;
         rollButton.GetComponentInChildren<Button>().interactable = true;
+        damage = 0; //reset damage
         buttonText.text = "Dismount";
         damageText.text = "Total Damage: " + damage; // reset damage text
         receivedWeaponText.text = "New Weapon?";
-        damage = 0; //reset damage
     }
 
     public static void MovePlayer()
@@ -175,78 +177,47 @@ public class GameController : MonoBehaviour
     {
         int weaponIndex = rand.Next(0, weaponSlots.Count);
 
+        if(weaponDmg > damageSlots[weaponIndex])
+        {
+            receivedWeaponText.text = "You have a better weapon.";
+            dismountButton.interactable = true;
+            searchButton.interactable = false;
+            weaponSlots.Remove(weaponSlots[weaponIndex]);
+            return;
+        }
+
         //switch statement checks for current weapon to determine the next weapon they'll get.
         switch (weaponSlots[weaponIndex])
         {
             case 0:
-                if (weaponDmg < 3)
-                {
-                    weaponIcon.sprite = weapons[0];
-                    weaponDmg = 3;
-                    weaponName.text = "Crossbow";
-                    weaponDmgText.text = "Damage: +" + weaponDmg;
-                }
-                else
-                {
-                    receivedWeaponText.text = "You have a better weapon.";
-                    return;
-                }
+                weaponIcon.sprite = weapons[0];
+                weaponDmg = 3;
+                weaponName.text = "Crossbow";
+                weaponDmgText.text = "Damage: +" + weaponDmg;
                 break;
             case 1:
-                if (weaponDmg < 4)
-                {
-                    weaponIcon.sprite = weapons[1];
-                    weaponDmg = 4;
-                    weaponName.text = "Flail";
-                    weaponDmgText.text = "Damage: +" + weaponDmg;
-                }
-                else
-                {
-                    receivedWeaponText.text = "You have a better weapon.";
-                    return;
-                }
+                weaponIcon.sprite = weapons[1];
+                weaponDmg = 4;
+                weaponName.text = "Flail";
+                weaponDmgText.text = "Damage: +" + weaponDmg;
                 break;
             case 2:
-                if (weaponDmg < 5)
-                {
-                    weaponIcon.sprite = weapons[2];
-                    weaponDmg = 5;
-                    weaponName.text = "Broad Sword";
-                    weaponDmgText.text = "Damage: +" + weaponDmg;
-                }
-                else
-                {
-                    receivedWeaponText.text = "You have a better weapon.";
-                    return;
-                }
+                weaponIcon.sprite = weapons[2];
+                weaponDmg = 5;
+                weaponName.text = "Broad Sword";
+                weaponDmgText.text = "Damage: +" + weaponDmg;
                 break;
             case 3:
-                if (weaponDmg < 6)
-                {
-                    weaponIcon.sprite = weapons[3];
-                    weaponDmg = 6;
-                    weaponName.text = "Dragon Slayer";
-                    weaponDmgText.text = "Damage: +" + weaponDmg;
-                }
-                else
-                {
-                    receivedWeaponText.text = "You have a better weapon.";
-                    return;
-                }
+                weaponIcon.sprite = weapons[3];
+                weaponDmg = 6;
+                weaponName.text = "Dragon Slayer";
+                weaponDmgText.text = "Damage: +" + weaponDmg;
                 break;
             case 4:
-                if (weaponDmg < 7)
-                {
-                    weaponIcon.sprite = weapons[4];
-                    weaponDmg = 7;
-                    weaponName.text = "Spell of the Gods";
-                    weaponDmgText.text = "Damage: +" + weaponDmg;
-                }
-                else
-                {
-                    receivedWeaponText.text = "You have a better weapon.";
-                    return;
-                }
+                weaponIcon.sprite = weapons[4];
+                weaponDmg = 7;
+                weaponName.text = "Spell of the Gods";
+                weaponDmgText.text = "Damage: +" + weaponDmg;
                 break;
         }
 
